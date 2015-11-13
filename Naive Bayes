@@ -1,0 +1,75 @@
+setwd("~/Downloads/MISC")
+credit <- read.csv("credit3.csv")
+credit$NPV <- gsub(",","",credit$NPV)
+credit$NPV <- as.numeric(credit$NPV)
+head(credit$NPV, 20)
+credit$CAN <- rep("Yes", nrow(credit))
+credit$CAN[credit$NPV <0] <- "No"
+credit$CAN <- factor(credit$CAN, levels = c("No", "Yes"))
+credit$CAN <- as.numeric(credit$CAN) - 1
+a <- matrix(table(credit$CAN))
+a <- a/sum(a)
+profit <- matrix (c(-1500,500))
+a <- a*profit
+a <- sum(a)
+a
+# if a is Negative then it proves that it is better of not to give loan to any customer.
+credit$OBS. <- NULL
+binage <- (max(credit$AGE)-min(credit$AGE))/6
+binage
+min <- min(credit$AGE)
+credit$AGEBIN <- as.numeric(cut(credit$AGE, c(min, min+binage, min+binage*2, min+binage*3, min+binage*4, min+binage*5, max(credit$AGE))))
+credit$AGEBIN <- as.factor(credit$AGEBIN)
+bindur<- (max(credit$DURATION)-min(credit$DURATION))/6
+mind <- min(credit$DURATION)
+credit$DURBIN <- as.numeric(cut(credit$DURATION, c(mind, mind+bindur, mind+bindur*2, mind+bindur*3, mind+bindur*4, mind+bindur*5, max(credit$DURATION))))
+credit$DURBIN <- as.factor(credit$DURBIN)
+credit$SAV_ACCT <- as.factor(credit$SAV_ACCT)
+credit$CHK_ACCT <- as.factor(credit$CHK_ACCT)
+credit$JOB <- as.factor(credit$JOB)
+credit$TYPE <- as.factor(credit$TYPE)
+credit$HISTORY <- as.factor(credit$HISTORY)
+credit$PRESENT_RESIDENT <- as.factor(credit$PRESENT_RESIDENT)
+credit$EMPLOYMENT <- as.factor(credit$EMPLOYMENT)
+credit$NUM_CREDITS <- as.factor(credit$NUM_CREDITS)
+credit$INSTALL_RATE <- as.factor(credit$INSTALL_RATE)
+credit$NUM_DEPENDENTS <- as.factor(credit$NUM_DEPENDENTS)
+credit$AMOUNT_REQUESTED <- gsub(",","",credit$AMOUNT_REQUESTED) # Converts to charecter and takes off','.
+credit$AMOUNT_REQUESTED <- as.numeric(credit$AMOUNT_REQUESTED)
+binamt <- (max(credit$AMOUNT_REQUESTED)-min(credit$AMOUNT_REQUESTED))/6
+mina <- min(credit$AMOUNT_REQUESTED)
+credit$AMT_REQ <- as.numeric(cut(credit$AMOUNT_REQUESTED, c(mina, mina+binamt, mina+binamt*2, mina+binamt*3, mina+binamt*4, mina+binamt*5, max(credit$AMOUNT_REQUESTED))))
+credit$AMT_REQ <- as.factor(credit$AMT_REQ)
+credit$AGE <- NULL
+credit$AMOUNT_REQUESTED <- NULL
+credit$NPV <- NULL
+credit$DURATION <- NULL
+str(credit)
+credit$CAN <- as.factor(credit$CAN)
+credit$EXTENDED <- NULL
+credit$REAL_ESTATE <- as.factor(credit$REAL_ESTATE)
+credit$FOREIGN <- as.factor(credit$FOREIGN)
+credit$TELEPHONE <- as.factor(credit$TELEPHONE)
+credit$OWN_RES <- as.factor(credit$OWN_RES)
+credit$OTHER_INSTALL <- as.factor(credit$OTHER_INSTALL)
+credit$GUARANTOR <- as.factor(credit$GUARANTOR)
+credit$RENT <- as.factor(credit$RENT)
+credit$CREDIT_EXTENDED <- NULL
+#library("caret")
+#install.packages('e1071')
+set.seed(12345)
+x <- sample(nrow(credit),0.7*nrow(credit),replace = FALSE)
+train <- credit[x,]
+valid <- credit[-x,]
+library(e1071)
+naive <- naiveBayes(CAN~., data = train)
+naive
+predictnb <- predict(naive, newdata = valid[,-18])
+nbtab <- table(valid[,18], predictnb)
+nbtab
+newdata <- data.frame(CHK_ACCT="1",SAV_ACCT="4", NUM_CREDITS="1", HISTORY="1", PRESENT_RESIDENT="1", EMPLOYMENT="1", JOB="2", NUM_DEPENDENTS="1", RENT="1", INSTALL_RATE="3", GUARANTOR="0", OTHER_INSTALL="0", OWN_RES="0", TELEPHONE="1", FOREIGN="0", REAL_ESTATE="0", TYPE="2", CAN="1", AGEBIN="1", DURBIN="1", AMT_REQ="2")
+newdatapred <- predict(naive, newdata = newdata[,-18], type = 'raw')
+newdatapred
+probnb <- predict(naive, newdata = valid[,-18], type <- 'raw')
+library('pROC')
+validnb <- as.numeric(valid$CAN)
