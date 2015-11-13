@@ -1,1 +1,1 @@
-# credit-analysis-logistic-regression
+# credit-analysis-logistic/knn/linear/NaiveBayes/Tree/
